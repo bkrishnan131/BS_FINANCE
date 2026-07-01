@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BS Finance - Loan management </title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{
+  --navy:#10233d;
+  --navy-2:#16314f;
+  --teal:#0e8a7d;
+  --teal-light:#e4f5f2;
+  --amber:#c98a2c;
+  --red:#b23b3b;
+  --paper:#f6f4ef;
+  --card:#ffffff;
+  --ink:#1b2430;
+  --ink-soft:#5c6a7a;
+  --line:#e4e0d6;
+  --radius:10px;
+  font-family: 'Segoe UI', Arial, Helvetica, sans-serif;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--paper);color:var(--ink);}
+::selection{background:var(--teal-light);}
+
+/* ---------- Login ---------- */
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:
+  radial-gradient(circle at 20% 20%, #163a5c 0%, transparent 45%),
+  linear-gradient(135deg, var(--navy) 0%, var(--navy-2) 100%);
+  padding:20px;}
+.login-card{background:var(--card);width:100%;max-width:420px;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.35);overflow:hidden;}
+.login-head{padding:28px 32px 18px;border-bottom:1px solid var(--line);}
+.brand{display:flex;align-items:center;gap:10px;}
+.brand .mark{width:36px;height:36px;border-radius:8px;background:var(--teal);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:18px;}
+.brand h1{font-size:19px;margin:0;letter-spacing:.2px;}
+.brand p{margin:2px 0 0;font-size:12.5px;color:var(--ink-soft);}
+.tabs{display:flex;margin:18px 32px 0;border-bottom:1px solid var(--line);}
+.tab-btn{flex:1;padding:10px 0;background:none;border:none;font-size:14px;color:var(--ink-soft);cursor:pointer;border-bottom:2px solid transparent;font-weight:600;}
+.tab-btn.active{color:var(--teal);border-bottom-color:var(--teal);}
+.login-body{padding:26px 32px 32px;}
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:12.5px;font-weight:600;color:var(--ink-soft);margin-bottom:5px;}
+.field input, .field select{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-size:14px;background:#fbfaf7;}
+.field input:focus, .field select:focus{outline:2px solid var(--teal);outline-offset:1px;background:#fff;}
+.btn{border:none;border-radius:8px;padding:10px 16px;font-size:14px;font-weight:600;cursor:pointer;transition:transform .05s ease;}
+.btn:active{transform:scale(.98);}
+.btn-primary{background:var(--teal);color:#fff;width:100%;padding:12px;font-size:14.5px;}
+.btn-primary:hover{background:#0b7568;}
+.btn-ghost{background:transparent;border:1px solid var(--line);color:var(--ink);}
+.btn-ghost:hover{background:#f0eee7;}
+.btn-danger{background:#fdecec;color:var(--red);}
+.btn-danger:hover{background:#fadada;}
+.hint{font-size:12px;color:var(--ink-soft);background:#f2f6f5;border:1px dashed var(--line);padding:8px 10px;border-radius:8px;margin-top:10px;line-height:1.5}
+.error{color:var(--red);font-size:13px;margin-top:8px;display:none;}
+
+/* ---------- App shell ---------- */
+.app{display:none;min-height:100vh;}
+.app.show{display:flex;}
+.sidebar{width:230px;background:var(--navy);color:#fff;display:flex;flex-direction:column;flex-shrink:0;}
+.sidebar .brand{padding:20px;border-bottom:1px solid rgba(255,255,255,.08);}
+.sidebar .brand h1{color:#fff;}
+.sidebar .brand p{color:#9fb0c3;}
+.nav{flex:1;padding:14px 10px;}
+.nav button{display:flex;align-items:center;gap:10px;width:100%;padding:11px 12px;background:none;border:none;color:#c9d4e0;font-size:14px;border-radius:8px;cursor:pointer;text-align:left;margin-bottom:3px;}
+.nav button.active{background:rgba(255,255,255,.1);color:#fff;font-weight:600;}
+.nav button:hover{background:rgba(255,255,255,.06);}
+.nav .ico{width:18px;text-align:center;}
+.side-foot{padding:14px;border-top:1px solid rgba(255,255,255,.08);}
+.who{font-size:12.5px;color:#9fb0c3;margin-bottom:8px;}
+.who b{color:#fff;display:block;font-size:14px;}
+
+.main{flex:1;padding:26px 34px;overflow-y:auto;max-height:100vh;}
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px;}
+.topbar h2{margin:0;font-size:22px;}
+.topbar .sub{color:var(--ink-soft);font-size:13.5px;margin-top:3px;}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:24px;}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;}
+.stat .label{font-size:12px;color:var(--ink-soft);font-weight:600;text-transform:uppercase;letter-spacing:.4px;}
+.stat .value{font-size:24px;font-weight:700;margin-top:6px;}
+.stat .value.teal{color:var(--teal);}
+.stat .value.amber{color:var(--amber);}
+.stat .value.red{color:var(--red);}
+
+.panel{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px;margin-bottom:20px;}
+.panel h3{margin:0 0 14px;font-size:15.5px;}
+.panel-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+
+table{width:100%;border-collapse:collapse;font-size:13.5px;}
+th{text-align:left;color:var(--ink-soft);font-weight:600;font-size:11.5px;text-transform:uppercase;letter-spacing:.4px;padding:8px 10px;border-bottom:1px solid var(--line);}
+td{padding:9px 10px;border-bottom:1px solid #f0eee7;}
+tr:hover td{background:#fbfaf6;}
+.badge{padding:3px 9px;border-radius:20px;font-size:11.5px;font-weight:700;display:inline-block;}
+.badge.active{background:var(--teal-light);color:var(--teal);}
+.badge.closed{background:#eef1f4;color:#5c6a7a;}
+.badge.pending{background:#fdf3e3;color:var(--amber);}
+.badge.paid{background:var(--teal-light);color:var(--teal);}
+.badge.overdue{background:#fdecec;color:var(--red);}
+
+.form-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px 16px;}
+.form-actions{margin-top:16px;display:flex;gap:10px;}
+.small-btn{padding:6px 12px;font-size:12.5px;border-radius:6px;}
+.link-btn{background:none;border:none;color:var(--teal);cursor:pointer;font-size:13px;font-weight:600;padding:0;}
+.link-btn:hover{text-decoration:underline;}
+
+.modal-bg{position:fixed;inset:0;background:rgba(16,35,61,.5);display:none;align-items:center;justify-content:center;z-index:50;padding:20px;}
+.modal-bg.show{display:flex;}
+.modal{background:#fff;border-radius:12px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;padding:24px;}
+.modal h3{margin:0 0 16px;}
+.close-x{float:right;background:none;border:none;font-size:20px;cursor:pointer;color:var(--ink-soft);}
+
+.empty{text-align:center;padding:30px;color:var(--ink-soft);font-size:13.5px;}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;}
+.search{padding:8px 12px;border:1px solid var(--line);border-radius:8px;font-size:13px;width:220px;}
+.progress-bar{background:#eee;border-radius:6px;height:7px;width:100%;overflow:hidden;margin-top:5px;}
+.progress-fill{background:var(--teal);height:100%;}
+.freq-tag{font-size:11px;color:var(--ink-soft);}
+.toast{position:fixed;bottom:22px;right:22px;background:var(--navy);color:#fff;padding:12px 18px;border-radius:8px;font-size:13.5px;box-shadow:0 8px 24px rgba(0,0,0,.25);z-index:100;display:none;}
+.file-input{display:none;}
+@media(max-width:800px){
+  .app.show{flex-direction:column;}
+  .sidebar{width:100%;flex-direction:row;overflow-x:auto;}
+  .nav{display:flex;padding:8px;}
+  .side-foot{display:none;}
+  .main{padding:18px;}
+  .form-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- ================= LOGIN ================= -->
+
+<div class="login-wrap" id="loginWrap">
+  <div class="login-card">
+    <div class="login-head">
+      <div class="brand">
+        <div class="mark">₹</div>
+        <div>
+          <h1>BS Finance Loan Management</h1>
+          <p> Trust. Grow. Prosper. Repeat</p>
+        </div>
+      </div>
+    </div>
+    <div class="login-body">
+      <div id="unifiedLoginForm">
+        <div class="field"><label>Username / login name</label><input id="loginUser" placeholder="User Name"></div>
+        <div class="field"><label>Password</label><input id="loginPass" type="password" placeholder="••••••••"></div>
+        <button class="btn btn-primary" onclick="unifiedLogin()">Login</button>
+      </div>
+      <div class="error" id="loginError"></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ================= ADMIN APP ================= -->
+<div class="app" id="adminApp">
+  <div class="sidebar">
+    <div class="brand"><div class="mark">₹</div><div><h1>LoanBook</h1><p>Admin console</p></div></div>
+    <div class="nav">
+      <button class="active" data-view="dashboard" onclick="showAdminView('dashboard')"><span class="ico">▦</span> Dashboard</button>
+      <button data-view="customers" onclick="showAdminView('customers')"><span class="ico">☺</span> Customers</button>
+      <button data-view="loans" onclick="showAdminView('loans')"><span class="ico">☰</span> Loans</button>
+      <button data-view="payments" onclick="showAdminView('payments')"><span class="ico">₹</span> Payments</button>
+      <button data-view="data" onclick="showAdminView('data')"><span class="ico">⇅</span> Import / Export</button>
+    </div>
+    <div class="side-foot">
+      <div class="who"><b>Administrator</b>admin</div>
+      <button class="btn btn-ghost small-btn" style="width:100%" onclick="logout()">Log out</button>
+    </div>
+  </div>
+  <div class="main" id="adminMain"></div>
+</div>
+
+<!-- ================= CUSTOMER APP ================= -->
+<div class="app" id="customerApp">
+  <div class="sidebar">
+    <div class="brand"><div class="mark">₹</div><div><h1>LoanBook</h1><p>My account</p></div></div>
+    <div class="nav">
+      <button class="active">▦ My summary</button>
+    </div>
+    <div class="side-foot">
+      <div class="who" id="custWho"><b>Customer</b></div>
+      <button class="btn btn-ghost small-btn" style="width:100%" onclick="logout()">Log out</button>
+    </div>
+  </div>
+  <div class="main" id="customerMain"></div>
+</div>
+
+<div class="modal-bg" id="modalBg"><div class="modal" id="modalBody"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ===================== CONFIG ===================== */
+// Paste your deployed Google Apps Script Web App URL here (see deployment guide).
+const API_URL = 'https://script.google.com/macros/s/AKfycbzOF3wHynTdqeV45omGdMcUZeqQ8SvlAdMPEX1SOHn1ucEoVUPfBMN0-aiNxQYTWqSUGg/exec';
+
+/* ===================== DATA (synced from Google Sheets) ===================== */
+let customers = [];
+let loans = [];
+let schedule = [];
+let payments = [];
+
+async function apiGet(){
+  const res = await fetch(API_URL, {method:'GET'});
+  const json = await res.json();
+  if(json.status !== 'ok') throw new Error(json.message || 'Server error');
+  return json.data;
+}
+async function apiPost(action, payload){
+  const res = await fetch(API_URL, {
+    method:'POST',
+    headers:{'Content-Type':'text/plain'}, // avoids CORS preflight on Apps Script
+    body: JSON.stringify({action, payload})
+  });
+  const json = await res.json();
+  if(json.status !== 'ok') throw new Error(json.message || 'Server error');
+  return json;
+}
+async function refreshData(){
+  const data = await apiGet();
+  customers = (data.customers||[]).map(c=>({...c, Password:String(c.Password)}));
+  loans = (data.loans||[]).map(l=>({...l, Principal:Number(l.Principal), InterestRatePercent:Number(l.InterestRatePercent),
+    Tenure:Number(l.Tenure), EMIAmount:Number(l.EMIAmount), TotalPayable:Number(l.TotalPayable),
+    TotalPaid:Number(l.TotalPaid), TotalPending:Number(l.TotalPending)}));
+  schedule = (data.schedule||[]).map(s=>({...s, InstallmentNo:Number(s.InstallmentNo), EMIAmount:Number(s.EMIAmount), PaidAmount:Number(s.PaidAmount||0)}));
+  payments = (data.payments||[]).map(p=>({...p, Amount:Number(p.Amount)}));
+}
+
+function addPeriod(d, freq){
+  const dt = new Date(d);
+  if(freq==='Daily') dt.setDate(dt.getDate()+1);
+  else if(freq==='Weekly') dt.setDate(dt.getDate()+7);
+  else if(freq==='Monthly') dt.setMonth(dt.getMonth()+1);
+  else if(freq==='Quarterly') dt.setMonth(dt.getMonth()+3);
+  return dt.toISOString().slice(0,10);
+}
+
+let currentUser = null; // {role:'admin'} or {role:'customer', data:{...}}
+let adminView = 'dashboard';
+
+/* ===================== HELPERS ===================== */
+const fmt = n => '₹' + Number(n||0).toLocaleString('en-IN',{maximumFractionDigits:2, minimumFractionDigits:2});
+const todayStr = () => new Date().toISOString().slice(0,10);
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.style.display='block';
+  setTimeout(()=>t.style.display='none', 2600);
+}
+function closeModal(){ document.getElementById('modalBg').classList.remove('show'); }
+function openModal(html){ document.getElementById('modalBody').innerHTML = html; document.getElementById('modalBg').classList.add('show'); }
+
+function custName(id){ const c = customers.find(x=>x.CustomerID===id); return c? c.Name : '—'; }
+function loanById(id){ return loans.find(l=>l.LoanID===id); }
+
+function recalcLoanTotals(loanId){
+  const loan = loanById(loanId);
+  if(!loan) return;
+  const rows = schedule.filter(s=>s.LoanID===loanId);
+  const paid = rows.reduce((a,s)=>a+Number(s.PaidAmount||0),0);
+  loan.TotalPaid = Math.round(paid*100)/100;
+  loan.TotalPending = Math.round((loan.TotalPayable - paid)*100)/100;
+  loan.Status = rows.every(s=>s.Status==='Paid') ? 'Closed' : 'Active';
+}
+
+/* ===================== LOGIN ===================== */
+function showLoginError(msg){
+  const e = document.getElementById('loginError');
+  e.textContent = msg; e.style.display='block';
+}
+async function unifiedLogin(){
+  const u = document.getElementById('loginUser').value.trim();
+  const p = document.getElementById('loginPass').value;
+  const btn = event.target;
+  document.getElementById('loginError').style.display='none';
+  if(!u || !p){ showLoginError('Enter your username/login name and password.'); return; }
+  btn.disabled = true; btn.textContent = 'Signing in…';
+  try{
+    // Try admin credentials first
+    const adminResult = await apiPost('adminLogin', {username:u, password:p});
+    if(adminResult.ok){
+      await refreshData();
+      currentUser = {role:'admin'};
+      document.getElementById('loginWrap').style.display='none';
+      document.getElementById('adminApp').classList.add('show');
+      showAdminView('dashboard');
+      return;
+    }
+    // Otherwise try as a customer
+    const custResult = await apiPost('customerLogin', {username:u, password:p});
+    if(custResult.ok){
+      await refreshData();
+      const c = customers.find(x=>x.LoginName===u);
+      currentUser = {role:'customer', data:c};
+      document.getElementById('loginWrap').style.display='none';
+      document.getElementById('customerApp').classList.add('show');
+      document.getElementById('custWho').innerHTML = '<b>'+c.Name+'</b>'+c.LoginName;
+      renderCustomerView();
+      return;
+    }
+    showLoginError('Incorrect username or password.');
+  }catch(err){
+    showLoginError('Could not reach the server. Check API_URL / your connection. (' + err.message + ')');
+  }finally{
+    btn.disabled = false; btn.textContent = 'Sign in';
+  }
+}
+function logout(){
+  currentUser = null;
+  document.getElementById('adminApp').classList.remove('show');
+  document.getElementById('customerApp').classList.remove('show');
+  document.getElementById('loginWrap').style.display='flex';
+  document.getElementById('loginUser').value=''; document.getElementById('loginPass').value='';
+}
+
+/* ===================== ADMIN VIEWS ===================== */
+async function showAdminView(view){
+  adminView = view;
+  document.querySelectorAll('#adminApp .nav button').forEach(b=>b.classList.toggle('active', b.dataset.view===view));
+  const main = document.getElementById('adminMain');
+  main.innerHTML = '<div class="empty">Loading…</div>';
+  try{ await refreshData(); }catch(err){ toast('Could not refresh from server: ' + err.message); }
+  if(view==='dashboard') main.innerHTML = renderDashboard();
+  else if(view==='customers') main.innerHTML = renderCustomers();
+  else if(view==='loans') main.innerHTML = renderLoans();
+  else if(view==='payments'){ main.innerHTML = renderPayments(); onPayLoanChange(); }
+  else if(view==='data') main.innerHTML = renderDataView();
+}
+
+function renderDashboard(){
+  const totalCust = customers.length;
+  const totalLoans = loans.length;
+  const active = loans.filter(l=>l.Status==='Active').length;
+  const closed = loans.filter(l=>l.Status==='Closed').length;
+  const disbursed = loans.reduce((a,l)=>a+Number(l.Principal),0);
+  const payable = loans.reduce((a,l)=>a+Number(l.TotalPayable),0);
+  const collected = loans.reduce((a,l)=>a+Number(l.TotalPaid),0);
+  const pending = loans.reduce((a,l)=>a+Number(l.TotalPending),0);
+
+  const overdue = schedule.filter(s=>s.Status==='Pending' && s.DueDate < todayStr());
+  const recentPayments = [...payments].sort((a,b)=>b.Date.localeCompare(a.Date)).slice(0,6);
+
+  return `
+  <div class="topbar">
+    <div><h2>Dashboard</h2><div class="sub">Overview of all customers and loans</div></div>
+  </div>
+  <div class="grid">
+    <div class="stat"><div class="label">Total customers</div><div class="value">${totalCust}</div></div>
+    <div class="stat"><div class="label">Total loans</div><div class="value">${totalLoans}</div></div>
+    <div class="stat"><div class="label">Active loans</div><div class="value teal">${active}</div></div>
+    <div class="stat"><div class="label">Closed loans</div><div class="value">${closed}</div></div>
+    <div class="stat"><div class="label">Principal disbursed</div><div class="value">${fmt(disbursed)}</div></div>
+    <div class="stat"><div class="label">Total payable</div><div class="value">${fmt(payable)}</div></div>
+    <div class="stat"><div class="label">Collected</div><div class="value teal">${fmt(collected)}</div></div>
+    <div class="stat"><div class="label">Pending</div><div class="value amber">${fmt(pending)}</div></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><h3>Overdue EMIs (${overdue.length})</h3></div>
+    ${overdue.length===0?'<div class="empty">No overdue EMIs. Nice work.</div>':`
+    <table><thead><tr><th>Customer</th><th>Loan</th><th>Installment #</th><th>Due date</th><th>Amount</th></tr></thead>
+    <tbody>
+    ${overdue.slice(0,10).map(s=>{
+      const loan = loanById(s.LoanID);
+      return `<tr><td>${custName(loan.CustomerID)}</td><td>${s.LoanID}</td><td>${s.InstallmentNo}</td><td>${s.DueDate}</td><td>${fmt(s.EMIAmount)}</td></tr>`;
+    }).join('')}
+    </tbody></table>`}
+  </div>
+
+  <div class="panel">
+    <h3>Recent payments</h3>
+    ${recentPayments.length===0?'<div class="empty">No payments recorded yet.</div>':`
+    <table><thead><tr><th>Date</th><th>Customer</th><th>Loan</th><th>Amount</th></tr></thead>
+    <tbody>
+    ${recentPayments.map(p=>{
+      const loan = loanById(p.LoanID);
+      return `<tr><td>${p.Date}</td><td>${custName(loan.CustomerID)}</td><td>${p.LoanID}</td><td>${fmt(p.Amount)}</td></tr>`;
+    }).join('')}
+    </tbody></table>`}
+  </div>`;
+}
+
+function renderCustomers(){
+  return `
+  <div class="topbar">
+    <div><h2>Customers</h2><div class="sub">Manage customer records and login credentials</div></div>
+    <button class="btn btn-primary" style="width:auto" onclick="openAddCustomerModal()">+ Add customer</button>
+  </div>
+  <div class="panel">
+    <table>
+      <thead><tr><th>ID</th><th>Name</th><th>Phone</th><th>Login name</th><th>Loans</th><th>Created</th><th></th></tr></thead>
+      <tbody>
+      ${customers.map(c=>{
+        const n = loans.filter(l=>l.CustomerID===c.CustomerID).length;
+        return `<tr>
+          <td>${c.CustomerID}</td><td>${c.Name}</td><td>${c.Phone||''}</td>
+          <td>${c.LoginName}</td><td>${n}</td><td>${c.CreatedDate}</td>
+          <td><button class="link-btn" onclick="openAddLoanModal('${c.CustomerID}')">+ Loan</button></td>
+        </tr>`;
+      }).join('') || '<tr><td colspan="7" class="empty">No customers yet.</td></tr>'}
+      </tbody>
+    </table>
+  </div>`;
+}
+
+function openAddCustomerModal(){
+  openModal(`
+    <button class="close-x" onclick="closeModal()">&times;</button>
+    <h3>Add customer</h3>
+    <div class="form-grid">
+      <div class="field"><label>Full name</label><input id="fName"></div>
+      <div class="field"><label>Phone</label><input id="fPhone"></div>
+      <div class="field"><label>Email</label><input id="fEmail"></div>
+      <div class="field"><label>Address</label><input id="fAddress"></div>
+      <div class="field"><label>Login name</label><input id="fLogin"></div>
+      <div class="field"><label>Password</label><input id="fPass"></div>
+    </div>
+    <div class="error" id="formError"></div>
+    <div class="form-actions">
+      <button class="btn btn-primary" style="width:auto" onclick="saveCustomer()">Save customer</button>
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+    </div>
+  `);
+}
+async function saveCustomer(){
+  const name = document.getElementById('fName').value.trim();
+  const login = document.getElementById('fLogin').value.trim();
+  const pass = document.getElementById('fPass').value.trim();
+  if(!name || !login || !pass){
+    document.getElementById('formError').style.display='block';
+    document.getElementById('formError').textContent = 'Name, login name and password are required.';
+    return;
+  }
+  if(customers.some(c=>c.LoginName===login)){
+    document.getElementById('formError').style.display='block';
+    document.getElementById('formError').textContent = 'That login name is already taken.';
+    return;
+  }
+  try{
+    const result = await apiPost('addCustomer', {
+      name, phone:document.getElementById('fPhone').value.trim(),
+      email:document.getElementById('fEmail').value.trim(),
+      address:document.getElementById('fAddress').value.trim(),
+      login, password:pass
+    });
+    if(result.error){
+      document.getElementById('formError').style.display='block';
+      document.getElementById('formError').textContent = result.error;
+      return;
+    }
+    closeModal(); toast('Customer added.'); showAdminView('customers');
+  }catch(err){
+    document.getElementById('formError').style.display='block';
+    document.getElementById('formError').textContent = 'Server error: ' + err.message;
+  }
+}
+
+function renderLoans(){
+  return `
+  <div class="topbar">
+    <div><h2>Loans</h2><div class="sub">All loans across customers</div></div>
+    <button class="btn btn-primary" style="width:auto" onclick="openAddLoanModal()">+ New loan</button>
+  </div>
+  <div class="panel">
+    <table>
+      <thead><tr><th>Loan ID</th><th>Customer</th><th>Principal</th><th>Rate</th><th>Frequency</th><th>EMI</th><th>Paid / Payable</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+      ${loans.map(l=>`
+        <tr>
+          <td>${l.LoanID}</td><td>${custName(l.CustomerID)}</td><td>${fmt(l.Principal)}</td>
+          <td>${l.InterestRatePercent}%</td><td>${l.Frequency}</td><td>${fmt(l.EMIAmount)}</td>
+          <td>${fmt(l.TotalPaid)} / ${fmt(l.TotalPayable)}
+            <div class="progress-bar"><div class="progress-fill" style="width:${Math.min(100,(l.TotalPaid/l.TotalPayable*100)||0)}%"></div></div>
+          </td>
+          <td><span class="badge ${l.Status.toLowerCase()}">${l.Status}</span></td>
+          <td><button class="link-btn" onclick="openLoanDetail('${l.LoanID}')">View</button></td>
+        </tr>`).join('') || '<tr><td colspan="9" class="empty">No loans yet.</td></tr>'}
+      </tbody>
+    </table>
+  </div>`;
+}
+
+function openAddLoanModal(prefCustId){
+  const options = customers.map(c=>`<option value="${c.CustomerID}" ${c.CustomerID===prefCustId?'selected':''}>${c.Name} (${c.CustomerID})</option>`).join('');
+  openModal(`
+    <button class="close-x" onclick="closeModal()">&times;</button>
+    <h3>New loan</h3>
+    <div class="form-grid">
+      <div class="field" style="grid-column:1/3;"><label>Customer</label><select id="lCust">${options}</select></div>
+      <div class="field"><label>Principal amount (₹)</label><input id="lPrincipal" type="number" value="10000"></div>
+      <div class="field"><label>Interest rate (% flat, total)</label><input id="lRate" type="number" value="10"></div>
+      <div class="field"><label>Repayment frequency</label>
+        <select id="lFreq">
+          <option>Daily</option><option>Weekly</option><option selected>Monthly</option><option>Quarterly</option>
+        </select>
+      </div>
+      <div class="field"><label>Number of installments</label><input id="lTenure" type="number" value="12"></div>
+      <div class="field"><label>Start date</label><input id="lStart" type="date" value="${todayStr()}"></div>
+      <div class="field"><label>Computed EMI</label><input id="lEmiPreview" disabled></div>
+    </div>
+    <div class="error" id="formError"></div>
+    <div class="form-actions">
+      <button class="btn btn-primary" style="width:auto" onclick="saveLoan()">Create loan</button>
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+    </div>
+  `);
+  ['lPrincipal','lRate','lTenure'].forEach(id=>document.getElementById(id).addEventListener('input', updateEmiPreview));
+  updateEmiPreview();
+}
+function updateEmiPreview(){
+  const p = Number(document.getElementById('lPrincipal').value)||0;
+  const r = Number(document.getElementById('lRate').value)||0;
+  const t = Number(document.getElementById('lTenure').value)||1;
+  const total = p*(1+r/100);
+  document.getElementById('lEmiPreview').value = fmt(total/t) + '  (total payable ' + fmt(total) + ')';
+}
+async function saveLoan(){
+  const custId = document.getElementById('lCust').value;
+  const principal = Number(document.getElementById('lPrincipal').value);
+  const rate = Number(document.getElementById('lRate').value);
+  const freq = document.getElementById('lFreq').value;
+  const tenure = Number(document.getElementById('lTenure').value);
+  const start = document.getElementById('lStart').value;
+  if(!custId || !principal || !tenure || !start){
+    document.getElementById('formError').style.display='block';
+    document.getElementById('formError').textContent = 'Please fill all required fields.';
+    return;
+  }
+  try{
+    await apiPost('addLoan', {customerId:custId, principal, rate, frequency:freq, tenure, startDate:start});
+    closeModal(); toast('Loan created.'); showAdminView('loans');
+  }catch(err){
+    document.getElementById('formError').style.display='block';
+    document.getElementById('formError').textContent = 'Server error: ' + err.message;
+  }
+}
+
+function openLoanDetail(loanId){
+  const loan = loanById(loanId);
+  const rows = schedule.filter(s=>s.LoanID===loanId);
+  openModal(`
+    <button class="close-x" onclick="closeModal()">&times;</button>
+    <h3>${loan.LoanID} — ${custName(loan.CustomerID)}</h3>
+    <p style="color:var(--ink-soft);font-size:13px;margin-top:-8px;">
+      Principal ${fmt(loan.Principal)} · ${loan.InterestRatePercent}% flat · ${loan.Frequency} ·
+      <span class="badge ${loan.Status.toLowerCase()}">${loan.Status}</span>
+    </p>
+    <table>
+      <thead><tr><th>#</th><th>Due date</th><th>EMI</th><th>Status</th><th>Paid date</th></tr></thead>
+      <tbody>
+      ${rows.map(s=>`<tr>
+        <td>${s.InstallmentNo}</td><td>${s.DueDate}</td><td>${fmt(s.EMIAmount)}</td>
+        <td><span class="badge ${s.Status==='Paid'?'paid':(s.DueDate<todayStr()?'overdue':'pending')}">${s.Status==='Paid'?'Paid':(s.DueDate<todayStr()?'Overdue':'Pending')}</span></td>
+        <td>${s.PaidDate||'—'}</td>
+      </tr>`).join('')}
+      </tbody>
+    </table>
+    <div class="form-actions"><button class="btn btn-ghost" onclick="closeModal()">Close</button></div>
+  `);
+}
+
+function renderPayments(){
+  const pendingLoans = loans.filter(l=>l.Status==='Active');
+  const options = pendingLoans.map(l=>`<option value="${l.LoanID}">${l.LoanID} — ${custName(l.CustomerID)}</option>`).join('');
+  const recent = [...payments].sort((a,b)=>b.Date.localeCompare(a.Date));
+  return `
+  <div class="topbar">
+    <div><h2>Payments</h2><div class="sub">Record an EMI payment made by a customer</div></div>
+  </div>
+  <div class="panel">
+    <h3>Record payment</h3>
+    <div class="form-grid">
+      <div class="field" style="grid-column:1/3;"><label>Loan</label>
+        <select id="pLoan" onchange="onPayLoanChange()">${options || '<option>No active loans</option>'}</select>
+      </div>
+      <div class="field"><label>Next due installment</label><input id="pInstNo" disabled></div>
+      <div class="field"><label>Amount (₹)</label><input id="pAmount" type="number"></div>
+      <div class="field"><label>Payment date</label><input id="pDate" type="date" value="${todayStr()}"></div>
+      <div class="field"><label>Notes</label><input id="pNotes" placeholder="optional"></div>
+    </div>
+    <div class="error" id="payError"></div>
+    <div class="form-actions">
+      <button class="btn btn-primary" style="width:auto" onclick="recordPayment()">Save payment</button>
+    </div>
+  </div>
+  <div class="panel">
+    <h3>Payment history</h3>
+    ${recent.length===0?'<div class="empty">No payments yet.</div>':`
+    <table><thead><tr><th>Date</th><th>Loan</th><th>Customer</th><th>Amount</th><th>Notes</th></tr></thead>
+    <tbody>${recent.map(p=>{
+      const loan=loanById(p.LoanID);
+      return `<tr><td>${p.Date}</td><td>${p.LoanID}</td><td>${custName(loan.CustomerID)}</td><td>${fmt(p.Amount)}</td><td>${p.Notes||''}</td></tr>`;
+    }).join('')}</tbody></table>`}
+  </div>`;
+}
+function onPayLoanChange(){
+  const loanId = document.getElementById('pLoan').value;
+  const next = schedule.find(s=>s.LoanID===loanId && s.Status==='Pending');
+  if(next){
+    document.getElementById('pInstNo').value = '#'+next.InstallmentNo+' due '+next.DueDate;
+    document.getElementById('pAmount').value = next.EMIAmount;
+  } else {
+    document.getElementById('pInstNo').value = 'All paid';
+    document.getElementById('pAmount').value = '';
+  }
+}
+async function recordPayment(){
+  const loanId = document.getElementById('pLoan').value;
+  const amount = Number(document.getElementById('pAmount').value);
+  const date = document.getElementById('pDate').value;
+  const notes = document.getElementById('pNotes').value.trim();
+  const next = schedule.find(s=>s.LoanID===loanId && s.Status==='Pending');
+  if(!next){
+    document.getElementById('payError').style.display='block';
+    document.getElementById('payError').textContent = 'This loan has no pending installments.';
+    return;
+  }
+  if(!amount || amount<=0){
+    document.getElementById('payError').style.display='block';
+    document.getElementById('payError').textContent = 'Enter a valid amount.';
+    return;
+  }
+  try{
+    const result = await apiPost('recordPayment', {loanId, amount, date, notes});
+    if(result.error){
+      document.getElementById('payError').style.display='block';
+      document.getElementById('payError').textContent = result.error;
+      return;
+    }
+    toast('Payment recorded.');
+    showAdminView('payments');
+  }catch(err){
+    document.getElementById('payError').style.display='block';
+    document.getElementById('payError').textContent = 'Server error: ' + err.message;
+  }
+}
+
+function renderDataView(){
+  return `
+  <div class="topbar"><div><h2>Data & backup</h2><div class="sub">Your live database is the connected Google Sheet</div></div></div>
+  <div class="panel">
+    <h3>Download a backup snapshot</h3>
+    <p style="color:var(--ink-soft);font-size:13.5px;">Downloads today's data as an Excel file — handy for offline records or audits. This does <b>not</b> change the live data; the Google Sheet stays the single source of truth.</p>
+    <button class="btn btn-primary" style="width:auto" onclick="exportExcel()">Download loan_management_database.xlsx</button>
+  </div>
+  <div class="panel">
+    <h3>Need to bulk-edit or fix a mistake?</h3>
+    <p style="color:var(--ink-soft);font-size:13.5px;">Open the connected Google Sheet directly and edit rows there — every admin and customer screen reads from it live, so changes appear the next time a view refreshes (a few seconds).</p>
+  </div>`;
+}
+
+/* ===================== EXCEL BACKUP EXPORT ===================== */
+function exportExcel(){
+  const wb = XLSX.utils.book_new();
+  const wsCust = XLSX.utils.json_to_sheet(customers, {header:['CustomerID','Name','Phone','Email','Address','LoginName','Password','CreatedDate']});
+  const wsLoans = XLSX.utils.json_to_sheet(loans, {header:['LoanID','CustomerID','Principal','InterestRatePercent','Frequency','Tenure','EMIAmount','StartDate','Status','TotalPayable','TotalPaid','TotalPending']});
+  const wsSched = XLSX.utils.json_to_sheet(schedule, {header:['ScheduleID','LoanID','InstallmentNo','DueDate','EMIAmount','PaidAmount','PaidDate','Status']});
+  const wsPay = XLSX.utils.json_to_sheet(payments, {header:['PaymentID','LoanID','ScheduleID','Amount','Date','Notes']});
+  const dash = [
+    {Metric:'Total Customers', Value: customers.length},
+    {Metric:'Total Loans', Value: loans.length},
+    {Metric:'Active Loans', Value: loans.filter(l=>l.Status==='Active').length},
+    {Metric:'Closed Loans', Value: loans.filter(l=>l.Status==='Closed').length},
+    {Metric:'Total Principal Disbursed', Value: loans.reduce((a,l)=>a+Number(l.Principal),0)},
+    {Metric:'Total Payable', Value: loans.reduce((a,l)=>a+Number(l.TotalPayable),0)},
+    {Metric:'Total Collected', Value: loans.reduce((a,l)=>a+Number(l.TotalPaid),0)},
+    {Metric:'Total Pending', Value: loans.reduce((a,l)=>a+Number(l.TotalPending),0)},
+  ];
+  const wsDash = XLSX.utils.json_to_sheet(dash);
+  XLSX.utils.book_append_sheet(wb, wsCust, 'Customers');
+  XLSX.utils.book_append_sheet(wb, wsLoans, 'Loans');
+  XLSX.utils.book_append_sheet(wb, wsSched, 'Schedule');
+  XLSX.utils.book_append_sheet(wb, wsPay, 'Payments');
+  XLSX.utils.book_append_sheet(wb, wsDash, 'Dashboard');
+  XLSX.writeFile(wb, 'loan_management_database.xlsx');
+  toast('Backup downloaded.');
+}
+
+/* ===================== CUSTOMER VIEW ===================== */
+function renderCustomerView(){
+  const c = currentUser.data;
+  const myLoans = loans.filter(l=>l.CustomerID===c.CustomerID);
+  const active = myLoans.filter(l=>l.Status==='Active');
+  const closed = myLoans.filter(l=>l.Status==='Closed');
+  const totalTaken = myLoans.reduce((a,l)=>a+Number(l.Principal),0);
+  const totalPaid = myLoans.reduce((a,l)=>a+Number(l.TotalPaid),0);
+  const totalPending = myLoans.reduce((a,l)=>a+Number(l.TotalPending),0);
+  const myScheduleIds = myLoans.map(l=>l.LoanID);
+  const pendingEmis = schedule.filter(s=>myScheduleIds.includes(s.LoanID) && s.Status==='Pending').sort((a,b)=>a.DueDate.localeCompare(b.DueDate));
+
+  document.getElementById('customerMain').innerHTML = `
+  <div class="topbar">
+    <div><h2>Welcome, ${c.Name}</h2><div class="sub">Here's a summary of your loans</div></div>
+  </div>
+  <div class="grid">
+    <div class="stat"><div class="label">Loans taken</div><div class="value">${myLoans.length}</div></div>
+    <div class="stat"><div class="label">Active loans</div><div class="value teal">${active.length}</div></div>
+    <div class="stat"><div class="label">Closed loans</div><div class="value">${closed.length}</div></div>
+    <div class="stat"><div class="label">Pending EMIs</div><div class="value amber">${pendingEmis.length}</div></div>
+    <div class="stat"><div class="label">Total taken</div><div class="value">${fmt(totalTaken)}</div></div>
+    <div class="stat"><div class="label">Total paid</div><div class="value teal">${fmt(totalPaid)}</div></div>
+    <div class="stat"><div class="label">Total pending</div><div class="value red">${fmt(totalPending)}</div></div>
+  </div>
+
+  <div class="panel">
+    <h3>My loans</h3>
+    ${myLoans.length===0?'<div class="empty">You have no loans on record.</div>':`
+    <table><thead><tr><th>Loan</th><th>Principal</th><th>Frequency</th><th>EMI</th><th>Paid / Payable</th><th>Status</th></tr></thead>
+    <tbody>${myLoans.map(l=>`
+      <tr><td>${l.LoanID}</td><td>${fmt(l.Principal)}</td><td>${l.Frequency}</td><td>${fmt(l.EMIAmount)}</td>
+      <td>${fmt(l.TotalPaid)} / ${fmt(l.TotalPayable)}
+        <div class="progress-bar"><div class="progress-fill" style="width:${Math.min(100,(l.TotalPaid/l.TotalPayable*100)||0)}%"></div></div>
+      </td>
+      <td><span class="badge ${l.Status.toLowerCase()}">${l.Status}</span></td></tr>`).join('')}
+    </tbody></table>`}
+  </div>
+
+  <div class="panel">
+    <h3>Upcoming / pending EMIs</h3>
+    ${pendingEmis.length===0?'<div class="empty">No pending EMIs — all caught up.</div>':`
+    <table><thead><tr><th>Loan</th><th>Installment #</th><th>Due date</th><th>Amount</th><th>Status</th></tr></thead>
+    <tbody>${pendingEmis.map(s=>`
+      <tr><td>${s.LoanID}</td><td>${s.InstallmentNo}</td><td>${s.DueDate}</td><td>${fmt(s.EMIAmount)}</td>
+      <td><span class="badge ${s.DueDate<todayStr()?'overdue':'pending'}">${s.DueDate<todayStr()?'Overdue':'Pending'}</span></td></tr>`).join('')}
+    </tbody></table>`}
+  </div>`;
+}
+
+/* ===================== STARTUP CHECK ===================== */
+if(API_URL.indexOf('PASTE_YOUR') === 0){
+  document.getElementById('loginError').style.display='block';
+  document.getElementById('loginError').innerHTML =
+    'This app is not connected to a database yet. Open the file, find <code>const API_URL</code> near the top of the &lt;script&gt;, and paste your deployed Apps Script Web App URL there — see the deployment guide.';
+}
+</script>
+</body>
+</html>
